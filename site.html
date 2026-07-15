@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baaki — know what's left</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #182A3A;
+    --navy-deep: #101E2A;
+    --parchment: #F3ECD9;
+    --parchment-line: #DCD1AE;
+    --ink: #1F2A24;
+    --ink-soft: #4B5750;
+    --cream: #F5F1E6;
+    --gold: #C89B3C;
+    --rust: #A6432D;
+    --teal: #3D7068;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--navy);
+    color:var(--cream);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3{
+    font-family:'Zilla Slab', serif;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px;}
+
+  /* ---- Nav ---- */
+  .navbar{
+    position:sticky; top:0; z-index:50;
+    background:var(--navy-deep);
+    border-bottom:1px solid rgba(200,155,60,0.25);
+  }
+  .navbar .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height:64px;
+  }
+  .brand{
+    font-family:'Zilla Slab', serif;
+    font-weight:700; font-size:22px;
+    color:var(--cream);
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .brand .tick{color:var(--gold);}
+  .navlinks{display:flex; gap:28px; list-style:none; margin:0; padding:0;}
+  .navlinks a{
+    font-size:14px; text-decoration:none; color:var(--cream);
+    opacity:0.75; padding:6px 2px; border-bottom:2px solid transparent;
+    transition:opacity .15s ease, border-color .15s ease;
+  }
+  .navlinks a:hover{opacity:1; border-color:var(--gold);}
+  .navcta{
+    background:var(--gold); color:var(--navy-deep); font-weight:600;
+    padding:9px 18px; border-radius:3px; font-size:14px; text-decoration:none;
+    border:none; cursor:pointer;
+  }
+
+  /* ---- Hero ---- */
+  .hero{padding:76px 0 60px;}
+  .hero-grid{display:grid; grid-template-columns:1.05fr 1fr; gap:56px; align-items:start;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--gold); margin-bottom:18px; display:block;
+  }
+  .hero h1{font-size:46px; font-weight:600; color:var(--cream); line-height:1.12;}
+  .hero h1 em{font-style:normal; color:var(--gold);}
+  .hero p.lede{
+    font-size:17px; color:rgba(245,241,230,0.72); max-width:440px; margin-top:18px;
+  }
+  .hero-actions{display:flex; gap:14px; margin-top:30px;}
+  .btn-primary{
+    background:var(--gold); color:var(--navy-deep); font-weight:600;
+    padding:13px 24px; border-radius:3px; text-decoration:none; font-size:15px;
+    border:none; cursor:pointer;
+  }
+  .btn-ghost{
+    background:transparent; color:var(--cream); border:1px solid rgba(245,241,230,0.35);
+    padding:13px 24px; border-radius:3px; text-decoration:none; font-size:15px;
+  }
+
+  /* ---- Ledger (signature element) ---- */
+  .ledger{
+    background:var(--parchment);
+    color:var(--ink);
+    border-radius:2px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+    position:relative;
+  }
+  .ledger::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0; width:34px;
+    background:repeating-linear-gradient(
+      to bottom, transparent 0 10px, rgba(31,42,36,0.06) 10px 11px
+    );
+    border-right:1px dashed var(--parchment-line);
+  }
+  .ledger-inner{padding:26px 26px 22px 52px;}
+  .ledger-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-bottom:2px solid var(--ink); padding-bottom:12px; margin-bottom:14px;
+  }
+  .ledger-head .label{font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft);}
+  .ledger-head .balance{
+    font-family:'IBM Plex Mono', monospace; font-size:28px; font-weight:600;
+  }
+  .ledger-head .balance.negative{color:var(--rust);}
+  .ledger-head .balance.positive{color:var(--teal);}
+
+  .ledger-rows{max-height:200px; overflow-y:auto; margin-bottom:16px;}
+  .ledger-row{
+    display:grid; grid-template-columns:1fr auto auto; gap:10px;
+    font-family:'IBM Plex Mono', monospace; font-size:13px;
+    padding:7px 0; border-bottom:1px dashed var(--parchment-line);
+    align-items:center;
+  }
+  .ledger-row .desc{font-family:'IBM Plex Sans', sans-serif; font-size:13.5px;}
+  .ledger-row .amt.credit{color:var(--teal);}
+  .ledger-row .amt.debit{color:var(--rust);}
+  .ledger-row .tag{
+    font-size:10px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-soft); text-align:right;
+  }
+  .ledger-empty{
+    font-size:13px; color:var(--ink-soft); font-style:italic; padding:14px 0;
+  }
+
+  .ledger-form{
+    display:grid; grid-template-columns:1fr 110px auto auto; gap:8px;
+  }
+  .ledger-form input{
+    font-family:'IBM Plex Sans', sans-serif; font-size:13.5px;
+    padding:9px 10px; border:1px solid var(--parchment-line); border-radius:2px;
+    background:#fff; color:var(--ink);
+  }
+  .ledger-form input.amt-input{font-family:'IBM Plex Mono', monospace;}
+  .seg{display:flex; border:1px solid var(--parchment-line); border-radius:2px; overflow:hidden;}
+  .seg button{
+    flex:1; border:none; background:#fff; color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace; font-size:12px; padding:9px 6px; cursor:pointer;
+  }
+  .seg button.active.credit{background:var(--teal); color:#fff;}
+  .seg button.active.debit{background:var(--rust); color:#fff;}
+  .ledger-add{
+    background:var(--ink); color:var(--cream); border:none; border-radius:2px;
+    font-size:13px; font-weight:600; padding:9px 14px; cursor:pointer;
+  }
+  .ledger-hint{font-size:11px; color:var(--ink-soft); margin-top:10px;}
+
+  /* ---- Sections ---- */
+  section{padding:84px 0;}
+  .section-head{max-width:600px; margin-bottom:48px;}
+  .section-head .eyebrow{color:var(--gold);}
+  .section-head h2{font-size:32px; color:var(--cream); font-weight:600;}
+  .section-head p{color:rgba(245,241,230,0.68); margin-top:12px; font-size:15.5px;}
+
+  #about{background:var(--navy-deep);}
+  .about-grid{display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;}
+  .about-copy p{color:rgba(245,241,230,0.78); font-size:16px; margin:0 0 16px;}
+  .about-copy p:last-child{margin-bottom:0;}
+  .stub{
+    background:var(--parchment); color:var(--ink); padding:24px; border-radius:2px;
+    font-family:'IBM Plex Mono', monospace;
+    border-left:4px solid var(--gold);
+  }
+  .stub .stub-num{font-size:12px; color:var(--ink-soft); letter-spacing:0.08em;}
+  .stub .stub-line{font-size:15px; margin-top:6px;}
+
+  /* Features */
+  .feature-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:rgba(245,241,230,0.12);}
+  .feature-card{
+    background:var(--navy); padding:30px 26px;
+  }
+  .feature-card .num{font-family:'IBM Plex Mono', monospace; color:var(--gold); font-size:13px;}
+  .feature-card h3{font-size:19px; color:var(--cream); margin-top:10px; font-weight:600;}
+  .feature-card p{font-size:14.5px; color:rgba(245,241,230,0.68); margin-top:10px;}
+
+  /* How it works */
+  #how{background:var(--navy-deep);}
+  .steps{list-style:none; margin:0; padding:0; counter-reset:step;}
+  .step{
+    display:grid; grid-template-columns:56px 1fr; gap:20px;
+    padding:24px 0; border-bottom:1px solid rgba(245,241,230,0.1);
+    counter-increment:step;
+  }
+  .step:last-child{border-bottom:none;}
+  .step::before{
+    content:counter(step, decimal-leading-zero);
+    font-family:'IBM Plex Mono', monospace; font-size:22px; color:var(--gold);
+  }
+  .step h3{font-size:18px; color:var(--cream); font-weight:600;}
+  .step p{font-size:14.5px; color:rgba(245,241,230,0.68); margin-top:6px; max-width:520px;}
+
+  /* Contact */
+  #contact .wrap{
+    display:grid; grid-template-columns:1fr 1fr; gap:56px;
+  }
+  .contact-form{display:flex; flex-direction:column; gap:12px;}
+  .contact-form input, .contact-form textarea{
+    font-family:'IBM Plex Sans', sans-serif; font-size:14.5px;
+    padding:12px 14px; border-radius:2px; border:1px solid rgba(245,241,230,0.25);
+    background:transparent; color:var(--cream);
+  }
+  .contact-form textarea{min-height:100px; resize:vertical;}
+  .contact-form ::placeholder{color:rgba(245,241,230,0.4);}
+  .contact-form button{align-self:flex-start;}
+  .contact-info .label{font-family:'IBM Plex Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold); display:block; margin-bottom:6px;}
+  .contact-info .row{margin-bottom:22px;}
+  .contact-info .value{font-size:15px; color:var(--cream);}
+
+  footer{
+    border-top:1px solid rgba(245,241,230,0.12);
+    padding:26px 0; font-size:13px; color:rgba(245,241,230,0.5);
+  }
+  footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+
+  @media (max-width: 860px){
+    .hero-grid, .about-grid, #contact .wrap{grid-template-columns:1fr;}
+    .feature-grid{grid-template-columns:1fr;}
+    .hero h1{font-size:34px;}
+    .navlinks{display:none;}
+  }
+
+  :focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="wrap">
+    <div class="brand">Baaki<span class="tick">.</span></div>
+    <ul class="navlinks">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#demo" class="navcta">Try the ledger</a>
+  </div>
+</nav>
+
+<header class="hero" id="home">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Personal finance, kept honest</span>
+      <h1>Know your <em>baaki</em> —<br>not just your budget.</h1>
+      <p class="lede">Every rupee you earn, spend, and have left, in one running line. No categories to fight with, no dashboards to decode — just what's actually remaining, updated the moment you log something.</p>
+      <div class="hero-actions">
+        <a href="#demo" class="btn-primary">Add your first entry</a>
+        <a href="#about" class="btn-ghost">Why a ledger?</a>
+      </div>
+    </div>
+
+    <div class="ledger" id="demo">
+      <div class="ledger-inner">
+        <div class="ledger-head">
+          <span class="label">Baaki (remaining)</span>
+          <span class="balance mono positive" id="balanceDisplay">₹0</span>
+        </div>
+        <div class="ledger-rows" id="ledgerRows">
+          <div class="ledger-empty" id="ledgerEmpty">No entries yet — add your first income or spend below.</div>
+        </div>
+        <div class="ledger-form">
+          <input type="text" id="descInput" placeholder="What was it for?" maxlength="40">
+          <input type="number" id="amtInput" class="amt-input" placeholder="Amount" min="0">
+          <div class="seg">
+            <button type="button" id="creditBtn" class="active credit">+ In</button>
+            <button type="button" id="debitBtn" class="debit">– Out</button>
+          </div>
+          <button type="button" class="ledger-add" id="addBtn">Add</button>
+        </div>
+        <div class="ledger-hint">This runs entirely in your browser for the demo — nothing is saved or sent anywhere.</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="about">
+  <div class="wrap about-grid">
+    <div class="about-copy">
+      <span class="eyebrow">About Baaki</span>
+      <h2 style="margin-top:12px; margin-bottom:18px;">A passbook, not a spreadsheet.</h2>
+      <p>Most money apps ask you to categorize, tag, and forecast before they'll tell you anything useful. Baaki starts from the one number people actually check first: what's left.</p>
+      <p>The name comes from a word used across Hindi, Urdu, and everyday Tamil-English conversation for exactly that — the balance still owed, or still yours. It's the number a shopkeeper reads off a passbook without a second thought, and the number we think a finance app should lead with too.</p>
+    </div>
+    <div class="stub">
+      <div class="stub-num">ENTRY — 003</div>
+      <div class="stub-line">Chai &amp; snacks · <span style="color:var(--rust)">– ₹80</span></div>
+      <div class="stub-line" style="margin-top:8px;">Balance carried forward · <span style="color:var(--teal)">₹4,220</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Features</span>
+      <h2>Built around one question: what's left?</h2>
+      <p>A handful of things done well, instead of a dashboard full of charts nobody opens twice.</p>
+    </div>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="num">01</div>
+      <h3>Running balance</h3>
+      <p>Every entry — income or spend — updates one live number. No end-of-month surprises about where the money went.</p>
+    </div>
+    <div class="feature-card">
+      <div class="num">02</div>
+      <h3>Plain-language entries</h3>
+      <p>Log "chai and snacks — ₹80" the way you'd say it out loud. No forced categories or merchant codes.</p>
+    </div>
+    <div class="feature-card">
+      <div class="num">03</div>
+      <h3>Multiple pots</h3>
+      <p>Split baaki across a spending pot, a savings pot, and a shared pot — each with its own running remainder.</p>
+    </div>
+    <div class="feature-card">
+      <div class="num">04</div>
+      <h3>Weekly close</h3>
+      <p>A short passbook-style summary every Sunday: in, out, and what's carried forward — nothing more.</p>
+    </div>
+    <div class="feature-card">
+      <div class="num">05</div>
+      <h3>Shared ledgers</h3>
+      <p>Split rent or trip costs with friends on one shared ledger, so everyone sees the same "who owes what."</p>
+    </div>
+    <div class="feature-card">
+      <div class="num">06</div>
+      <h3>Offline-first</h3>
+      <p>Entries save locally first and sync when you're back online — built for patchy connections, not just fast ones.</p>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">How it works</span>
+      <h2>Three steps, in order</h2>
+      <p>Baaki is deliberately a short, linear flow — there's no setup wizard to get through first.</p>
+    </div>
+    <ol class="steps">
+      <li class="step">
+        <h3>Log what moved</h3>
+        <p>Add an entry the moment money comes in or goes out — takes about as long as writing a line in a notebook.</p>
+      </li>
+      <li class="step">
+        <h3>Watch baaki update</h3>
+        <p>The running balance recalculates instantly, so you always know what's left before you spend again.</p>
+      </li>
+      <li class="step">
+        <h3>Close the week</h3>
+        <p>Every Sunday, Baaki carries your balance forward into a fresh page — same idea as turning to a new passbook entry.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Get in touch</span>
+      <h2 style="margin-top:12px; margin-bottom:18px; color:var(--cream); font-size:28px;">Questions, feedback, or a feature request?</h2>
+      <form class="contact-form" onsubmit="return false;">
+        <input type="text" placeholder="Your name">
+        <input type="email" placeholder="Your email">
+        <textarea placeholder="What's on your mind?"></textarea>
+        <button type="submit" class="btn-primary">Send message</button>
+      </form>
+    </div>
+    <div class="contact-info">
+      <div class="row">
+        <span class="label">Email</span>
+        <span class="value">hello@baaki.app</span>
+      </div>
+      <div class="row">
+        <span class="label">Based in</span>
+        <span class="value">Chennai, India</span>
+      </div>
+      <div class="row">
+        <span class="label">Built as</span>
+        <span class="value">A concept project exploring AI-assisted website generation</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Baaki — a concept site, built as an exploration of AI-generated web design.</span>
+    <span>Home · About · Features · How it works · Contact</span>
+  </div>
+</footer>
+
+<script>
+  let entryType = 'credit';
+  let balance = 0;
+  const rowsEl = document.getElementById('ledgerRows');
+  const emptyEl = document.getElementById('ledgerEmpty');
+  const balanceEl = document.getElementById('balanceDisplay');
+  const descInput = document.getElementById('descInput');
+  const amtInput = document.getElementById('amtInput');
+  const creditBtn = document.getElementById('creditBtn');
+  const debitBtn = document.getElementById('debitBtn');
+
+  function setType(type){
+    entryType = type;
+    creditBtn.classList.toggle('active', type === 'credit');
+    debitBtn.classList.toggle('active', type === 'debit');
+  }
+  creditBtn.addEventListener('click', () => setType('credit'));
+  debitBtn.addEventListener('click', () => setType('debit'));
+
+  function formatRupee(n){
+    return '₹' + Math.abs(n).toLocaleString('en-IN');
+  }
+
+  function updateBalance(){
+    balanceEl.textContent = formatRupee(balance);
+    balanceEl.classList.toggle('negative', balance < 0);
+    balanceEl.classList.toggle('positive', balance >= 0);
+  }
+
+  function addEntry(){
+    const desc = descInput.value.trim() || (entryType === 'credit' ? 'Income' : 'Spend');
+    const amt = parseFloat(amtInput.value);
+    if (!amt || amt <= 0) { amtInput.focus(); return; }
+
+    if (emptyEl) emptyEl.remove();
+
+    balance += entryType === 'credit' ? amt : -amt;
+
+    const row = document.createElement('div');
+    row.className = 'ledger-row';
+    row.innerHTML = `
+      <span class="desc">${desc}</span>
+      <span class="amt ${entryType === 'credit' ? 'credit' : 'debit'}">${entryType === 'credit' ? '+' : '–'} ${formatRupee(amt)}</span>
+      <span class="tag">${entryType === 'credit' ? 'in' : 'out'}</span>
+    `;
+    rowsEl.prepend(row);
+    updateBalance();
+
+    descInput.value = '';
+    amtInput.value = '';
+    descInput.focus();
+  }
+
+  document.getElementById('addBtn').addEventListener('click', addEntry);
+  amtInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addEntry(); });
+  descInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addEntry(); });
+
+  updateBalance();
+</script>
+
+</body>
+</html>
